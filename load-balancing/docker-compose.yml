@@ -1,0 +1,42 @@
+version: "3.7"
+networks:
+  backend-elb:
+    driver: ${NETWORKS_DRIVER}
+    ipam:
+      config:
+      - subnet: 172.28.1.0/24
+
+services:
+  nginx:
+      container_name: nginx_elb
+      build:
+        context: ./nginx
+      volumes:
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
+        - ${NGINX_HOST_LOG_PATH}:/var/log/nginx
+        - ${NGINX_SITES_PATH}:/etc/nginx/sites-available
+        - ${NGINX_SSL_PATH}:/etc/nginx/ssl
+      ports:
+        - "${NGINX_HOST_HTTP_PORT}:80"
+        - "${NGINX_HOST_HTTPS_PORT}:443"
+      depends_on:
+        - php-fpm
+      networks:
+        backend-elb:
+          ipv4_address: 172.28.1.2
+  php-fpm:
+      container_name: php-fpm_elb
+      build:
+        context: ./php-fpm
+      volumes:
+        - ./php-fpm/php${PHP_VERSION}.ini:/usr/local/etc/php/php.ini
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
+      expose:
+        - "9000"
+      extra_hosts:
+        - "dockerhost:${DOCKER_HOST_IP}"
+      networks:
+        backend-elb:
+          ipv4_address: 172.28.1.3
+
+
