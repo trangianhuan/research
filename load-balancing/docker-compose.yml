@@ -24,6 +24,23 @@ services:
       networks:
         backend-elb:
           ipv4_address: 172.28.1.2
+  nginx2:
+      container_name: nginx_elb_2
+      build:
+        context: ./nginx
+      volumes:
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
+        - ${NGINX_HOST_LOG_PATH}:/var/log/nginx
+        - ${NGINX_SITES_PATH}:/etc/nginx/sites-available
+        - ${NGINX_SSL_PATH}:/etc/nginx/ssl
+      ports:
+        - "${NGINX_HOST_HTTP_PORT_2}:80"
+        - "${NGINX_HOST_HTTPS_PORT_2}:443"
+      depends_on:
+        - php-fpm
+      networks:
+        backend-elb:
+          ipv4_address: 172.28.1.4
   php-fpm:
       container_name: php-fpm_elb
       build:
